@@ -6,7 +6,7 @@ import seaborn as sns
 
 # Setting the scale and context for seaborn
 plt.style.use('ggplot')
-sns.set_context('notebook')
+sns.set_context('paper')
 
 ### Importing and Data Cleaning
 
@@ -32,6 +32,10 @@ print(ctc.isna().any())
 apportionment.dropna()
 hours.dropna()
 
+# Merging rows in the hours table
+hours = hours.groupby(['Date', 'User/Full Name']).agg({'Actual Hours' : 'sum'}).reset_index()
+hours.head()
+
 ### Exploratory Data Analysis
 
 ## 2.1. Case types
@@ -49,7 +53,7 @@ sns.boxplot( data = apportionment, x = 'Case Type', y = 'Final Apportioned Amoun
 plt.xticks(rotation = 90)
 plt.show()
 
-# Same plot as above except we made log10('Final Apportioned Amount')
+# Same plot as above except we made a mathematical transformation - log('Final Apportioned Amount')
 plt.clf()
 sns.boxplot( data = apportionment, x = 'Case Type', y = 'Final Apportioned Amount')
 plt.xticks(rotation = 90)
@@ -69,11 +73,25 @@ plt.xticks(rotation = 90)
 plt.show()
 
 # Above plot does not show appropriate xtick labelling.
-def lawyer (x):
-    """ Function to subset each lawyers from the apportionment data frame """
-    return apportionment[apportionment['User'] == x]
 
-def snsbox (data):
-    """ Function to plot boxplots using seaborn """
-    sns.catplot(data = data, x = 'Case Type', y = 'Final Apportioned Amount', hue = 'Status', kind = 'box')
+# Initialize a list of lawyers
+Lawyers = ['Lawyer A', 'Lawyer B', 'Lawyer C', 'Lawyer D', 'Lawyer E', 'Lawyer F', 'Lawyer G']
+
+# Looping through each lawyers and make a plot
+for lawyer in Lawyers:
+    l = apportionment[apportionment['User'] == lawyer]
+    sns.catplot(data = l, x = 'Case Type', y = 'Final Apportioned Amount', hue = 'Status', kind = 'box').set(title = lawyer)
+    plt.xticks( rotation = 90)
     plt.show()
+
+
+# Merging apportionment table and hours table to investigate relationship between clocked hours and apportioned amount
+apportionment_hours = apportionment.merge(hours, left_on = ['Date of Invoice', 'User'], right_on = ['Date', 'User/Full Name'], how = 'outer', suffixes = ['_a','_h'])
+apportionment_hours = apportionment_hours.drop(['Date', 'User/Full Name'], axis = 1)
+
+# Scatter plot between final apportioned amount and actual hours
+sns.relplot(data = apportionment_hours, y = 'Final Apportioned Amount', x = 'Actual Hours', kind = 'scatter')
+plt.show()
+
+# Correlation between final apportioned amount and actual hours
+apportionment_hours['Final Apportioned Amount'].corr(apportionment_hours['Actual Hours'])
