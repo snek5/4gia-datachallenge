@@ -84,14 +84,38 @@ for lawyer in Lawyers:
     plt.xticks( rotation = 90)
     plt.show()
 
+## 2.2. Correlation between clocked time and apportioned amount
 
 # Merging apportionment table and hours table to investigate relationship between clocked hours and apportioned amount
-apportionment_hours = apportionment.merge(hours, left_on = ['Date of Invoice', 'User'], right_on = ['Date', 'User/Full Name'], how = 'outer', suffixes = ['_a','_h'])
+apportionment_hours = apportionment.merge(hours, 
+left_on = ['Date of Invoice', 'User'], 
+right_on = ['Date', 'User/Full Name'], 
+how = 'outer', 
+suffixes = ['_a','_h'])
+
+# Dropping redundant columns
 apportionment_hours = apportionment_hours.drop(['Date', 'User/Full Name'], axis = 1)
 
+# Renaming the column Date of Invoice to Date
+apportionment_hours['Date'] = pd.to_datetime(apportionment_hours['Date of Invoice'])
+
 # Scatter plot between final apportioned amount and actual hours
-sns.relplot(data = apportionment_hours, y = 'Final Apportioned Amount', x = 'Actual Hours', kind = 'scatter')
+sns.relplot(data = apportionment_hours, y = 'Final Apportioned Amount', x = 'Actual Hours', kind = 'scatter', hue = 'User')
 plt.show()
 
 # Correlation between final apportioned amount and actual hours
 apportionment_hours['Final Apportioned Amount'].corr(apportionment_hours['Actual Hours'])
+
+## 2.3. Lawyers reaching their target revenue?
+
+# Grouping the data according to the month and lawyers
+apportionment_months = apportionment_hours.groupby([apportionment_hours['Date'].dt.month, 'User']).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
+
+# Plotting the total apportioned amount per month with respect to each lawyers
+g = sns.relplot(data = apportionment_months, 
+            x = 'Date', 
+            y = 'Final Apportioned Amount', 
+            hue = 'User').set(title = 'Total revenue for each month', 
+            xlabel = 'Month', 
+            ylabel = 'Total apportioned amount')
+plt.show()
