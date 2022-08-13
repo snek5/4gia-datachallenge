@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Setting the scale and context for seaborn
-plt.style.use('ggplot')
+plt.style.use('seaborn')
 sns.set_context('paper')
 
-### Importing and Data Cleaning
+"""
+Importing & Pre Processing Data
+"""
 
 # Importing the data from xlsx files using pandas
 apportionment = pd.read_excel('data.xlsx', sheet_name = 'Apportionment', parse_dates = True)
@@ -36,6 +38,77 @@ hours.dropna()
 hours = hours.groupby(['Date', 'User/Full Name']).agg({'Actual Hours' : 'sum'}).reset_index()
 hours.head()
 
+"""
+Exploratory Data Analysis
+"""
+
+# Adding an extra column with month names
+month_name = {1.0 : 'January',
+            2.0 : 'February',
+            3.0 : 'March',
+            4.0 : 'April',
+            5.0 : 'May',
+            6.0 : 'June'}
+
+def month_col (df, date):
+    return df[date].apply(lambda x : month_name[x])
+
+# Grouping the apportionment table by month only
+apportionment_by_month = apportionment.groupby(apportionment['Date of Invoice'].dt.month).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
+
+apportionment_by_month['Month'] = month_col(apportionment_by_month, 'Date of Invoice')
+print(apportionment_by_month)
+
+# Plotting the total apportioned amount per month
+sns.relplot(data = apportionment_by_month,
+                x = 'Month',
+                y = 'Final Apportioned Amount',
+                ci = None,
+                kind = 'line',
+                marker = 'o',
+                aspect = 2)
+plt.title('Total apportioned amount per month')
+plt.show()
+
+# Prints out the unique case types using the unique method
+apportionment['Case Type'].unique()
+
+# Prints out the summary statistics of the final apportionment amount per case type
+apportionment.groupby('Case Type').agg({'Final Apportioned Amount' : 'describe'})
+
+# Plot to show amount of cases managed
+sns.catplot(data = apportionment,
+                x = 'Case Type',
+                kind = 'count',
+                aspect = 2)
+plt.xticks(rotation = 90)
+plt.show()
+
+# Grouping the apportionment table by month and case type
+apportionment_by_month_case = apportionment.groupby(apportionment['Date of Invoice'].dt.month, 'Case Type').agg({'Final Apportioned Amount' : 'sum'}).reset_index()
+
+apportionment_by_month_case['Month'] = month_col(apportionment_by_month_case, 'Date of Invoice')
+
+# Plot to show apportionment ammount per case type
+sns.catplot(data = apportionment_by_month_case,
+                x = 'Case Type',
+                y = 'Final Apportioned Amount',
+                kind = 'bar',
+                ci = None,
+                col = 'Month',
+                aspect = 2,
+                dodge = True,
+                palette = 'Set2')
+plt.xticks( rotation = 90)
+plt.show()
+
+"""
+"""
+
+
+
+
+"""
 ### Exploratory Data Analysis
 
 ## 2.1. Case types
@@ -119,3 +192,31 @@ g = sns.relplot(data = apportionment_months,
             xlabel = 'Month', 
             ylabel = 'Total apportioned amount')
 plt.show()
+
+
+# Total apportioned amount per month
+
+apportionment_by_month = apportionment.groupby(apportionment['Date of Invoice'].dt.month).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
+
+# Adding an extra column with month names
+month_name = {1.0 : 'January',
+            2.0 : 'February',
+            3.0 : 'March',
+            4.0 : 'April',
+            5.0 : 'May',
+            6.0 : 'June'}
+
+apportionment_by_month['Month'] = apportionment_by_month['Date of Invoice'].apply(lambda x : month_name[x])
+
+apportionment_by_month
+
+# Plotting total apportioned amount per month
+sns.relplot(data = apportionment_by_month,
+            x = 'Month',
+            y = 'Final Apportioned Amount',
+            ci = None,
+            kind = 'line',
+            aspect = 2)
+plt.title('Total apportioned amount per month')
+plt.show()
+"""
