@@ -53,6 +53,8 @@ month_name = {1.0 : 'January',
 def month_col (df, date):
     return df[date].apply(lambda x : month_name[x])
 
+
+
 # Prints out the unique case types using the unique method
 apportionment['Case Type'].unique()
 
@@ -133,7 +135,7 @@ apportionment_by_month_lawyer = apportionment.groupby([apportionment['Date of In
 apportionment_by_month_lawyer['Month'] = month_col(apportionment_by_month_lawyer, 'Date of Invoice')
 
 # Plotting total apportioned amount per month by lawyer
-sns.relplot(data = apportionment_by_month_status,
+sns.relplot(data = apportionment_by_month_lawyer,
             x = 'Month',
             y = 'Final Apportioned Amount',
             ci = None,
@@ -213,12 +215,27 @@ print(hours.groupby('User/Full Name').agg({'Actual Hours' : 'mean'}))
 
 
 
+""" cum sum of apportionment by month """
+# testing - trying to show how much money has not been paid yet
+apportionment_by_month = apportionment.groupby(apportionment['Date of Invoice'].dt.month).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
+apportionment_by_month['cs'] = apportionment_by_month['Final Apportioned Amount'].cumsum()
+apportionment_by_month['Month'] = month_col(apportionment_by_month, 'Date of Invoice')
 
+test1 = apportionment_by_month_status[apportionment_by_month_status['Status'] == 'Paid']
+test1['cs'] = test1['Final Apportioned Amount'].cumsum()
+test2 = apportionment_by_month_status[apportionment_by_month_status['Status'] == 'Awaiting Payment']
+test2['cs'] = test2['Final Apportioned Amount'].cumsum()
 
+plt.plot(apportionment_by_month['Month'], apportionment_by_month['cs'], label = 'Cumulative apportioned amount')
+plt.plot(test1['Month'], test1['cs'], label = 'Cumulative paid apportioned amount')
+plt.plot(test2['Month'], test2['cs'], label = 'Cumulative unpaid apportioned amount')
+plt.legend()
+plt.plot()
 
-
-
-
+print('Total apportioned amount: ' + str(apportionment_by_month['Final Apportioned Amount'].sum()))
+print('Total paid apportionment: ' + str(test1['Final Apportioned Amount'].sum()))
+print('Total unpaid apportionment: ' + str(test2['Final Apportioned Amount'].sum()))
+print('Percentage unpaid apportionment: ' + str(test2['Final Apportioned Amount'].sum() / apportionment_by_month['Final Apportioned Amount'].sum() * 100 ) + '%')
 
 
 
