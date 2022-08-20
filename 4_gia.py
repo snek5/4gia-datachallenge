@@ -53,8 +53,6 @@ month_name = {1.0 : 'January',
 def month_col (df, date):
     return df[date].apply(lambda x : month_name[x])
 
-
-
 # Prints out the unique case types using the unique method
 apportionment['Case Type'].unique()
 
@@ -68,6 +66,8 @@ sns.catplot(data = apportionment,
                 x = 'Case Type',
                 kind = 'count',
                 aspect = 2)
+plt.ylabel('Count')
+plt.title('Amount of cases managed')
 plt.xticks(rotation = 90)
 plt.show()
 
@@ -88,6 +88,8 @@ sns.catplot(data = apportionment_by_month_case,
                 dodge = True,
                 palette = 'Set2')
 plt.xticks( rotation = 90)
+plt.ylabel('Apportioned amount ($)')
+plt.title('Apportioned amount per case type')
 plt.show()
 
 """ Monthly Revenue """
@@ -106,6 +108,7 @@ sns.relplot(data = apportionment_by_month,
                 marker = 'o',
                 aspect = 2)
 plt.title('Total monthly apportioned amount')
+plt.ylabel('Apportioned amount ($)')
 plt.show()
 
 """ Monthly Revenue by Payment Status """
@@ -124,7 +127,7 @@ sns.relplot(data = apportionment_by_month_status,
             aspect = 2,
             marker = 'o',
             palette = 'Paired')
-plt.ylabel('Apportioned amount')
+plt.ylabel('Apportioned amount ($)')
 plt.title('Total monthly apportioned amount')
 plt.show()
 
@@ -135,7 +138,7 @@ apportionment_by_month_lawyer = apportionment.groupby([apportionment['Date of In
 apportionment_by_month_lawyer['Month'] = month_col(apportionment_by_month_lawyer, 'Date of Invoice')
 
 # Plotting total apportioned amount per month by lawyer
-sns.relplot(data = apportionment_by_month_lawyer,
+sns.relplot(data = apportionment_by_month_status,
             x = 'Month',
             y = 'Final Apportioned Amount',
             ci = None,
@@ -143,7 +146,7 @@ sns.relplot(data = apportionment_by_month_lawyer,
             hue = 'User',
             aspect = 2,
             marker = 'o')
-plt.ylabel('Apportioned amount')
+plt.ylabel('Apportioned amount ($)')
 plt.title('Total monthly apportioned amount per lawyer')
 plt.show()
 
@@ -165,11 +168,17 @@ plt.show()
 # Plotting a countplot to see how many cases are paid/awaiting payment
 fig, ax = plt.subplots()
 ax = sns.countplot( x = 'Status', data = apportionment)
+plt.ylabel('Count')
+plt.xlabel('Payment status')
+plt.title('Amount of cases managed according to payment status')
 plt.show()
 
 # Plotting a countplot to see how many cases are paid/awaiting payment
 sns.countplot( x = 'Status', data = apportionment, hue = apportionment['Date of Invoice'].dt.month)
 plt.legend(['January', 'February', 'March', 'April', 'May', 'June'])
+plt.ylabel('Count')
+plt.xlabel('Payment status')
+plt.title('Amount of cases managed according to payment status')
 plt.show()
 
 """ Correlation between clocked hour and apportioned amount """ # double check the join
@@ -189,11 +198,12 @@ sns.lmplot(data = apportionment_hours,
             aspect = 2, 
             line_kws = {'color' : 'black'},
             scatter_kws = {'alpha' : 0.7})
-plt.title('Scatter plot between final apportioned amount against actual hours')
+plt.title('Scatter plot between apportioned amount against actual hours')
+plt.xlabel('Apportioned amount ($)')
 plt.show()
 
 # Correlation between final apportioned amount and actual hours
-print('Correlation between clocked hours and apportioned amount: ' + str(apportionment_hours['Final Apportioned Amount'].corr(apportionment_hours['Actual Hours'])))
+print('Correlation between clocked hours and apportioned amount: ' + str(round(apportionment_hours['Final Apportioned Amount'].corr(apportionment_hours['Actual Hours']),2)))
 
 """ Clocked hour by each lawyer """
 # Plotting hours clocked by each lawyers
@@ -207,35 +217,36 @@ sns.relplot(data = hours,
 plt.axhline(y = 10,
             color = 'black',
             linestyle = '-')
+plt.ylabel('Clocked hours')
+plt.title('Amount of hours clocked by each lawyer')
 plt.show()
 
 """ Average clocked hour by each lawyer """
 print(hours.groupby('User/Full Name').agg({'Actual Hours' : 'mean'}))
 
+""" Lawyers meeting their target revenue? """
+# Merging apportioned amount by month & lawyer with ctc table
+kpi = apportionment_by_month_lawyer.merge(ctc,
+                                        how = 'outer',
+                                        on = 'User')
+
+# Initializing condition list, choicelist and default for np.select function
+condlist = [kpi['Final Apportioned Amount'] > kpi['Mthly 4X'],
+            kpi['Final Apportioned Amount'] > kpi['Mthly 3X'],
+            kpi['Final Apportioned Amount'] > kpi['Mthly 2X'],
+            kpi['Final Apportioned Amount'] > kpi['Mthly 1X']]
+
+choicelist = ['> 4X', '> 3X', '> 2X', '> 1X']
+
+default = 'Not met'
+
+kpi['kpi'] = np.select(condlist, choicelist, default)
 
 
 
-""" cum sum of apportionment by month """
-# testing - trying to show how much money has not been paid yet
-apportionment_by_month = apportionment.groupby(apportionment['Date of Invoice'].dt.month).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
-apportionment_by_month['cs'] = apportionment_by_month['Final Apportioned Amount'].cumsum()
-apportionment_by_month['Month'] = month_col(apportionment_by_month, 'Date of Invoice')
 
-test1 = apportionment_by_month_status[apportionment_by_month_status['Status'] == 'Paid']
-test1['cs'] = test1['Final Apportioned Amount'].cumsum()
-test2 = apportionment_by_month_status[apportionment_by_month_status['Status'] == 'Awaiting Payment']
-test2['cs'] = test2['Final Apportioned Amount'].cumsum()
 
-plt.plot(apportionment_by_month['Month'], apportionment_by_month['cs'], label = 'Cumulative apportioned amount')
-plt.plot(test1['Month'], test1['cs'], label = 'Cumulative paid apportioned amount')
-plt.plot(test2['Month'], test2['cs'], label = 'Cumulative unpaid apportioned amount')
-plt.legend()
-plt.plot()
 
-print('Total apportioned amount: ' + str(apportionment_by_month['Final Apportioned Amount'].sum()))
-print('Total paid apportionment: ' + str(test1['Final Apportioned Amount'].sum()))
-print('Total unpaid apportionment: ' + str(test2['Final Apportioned Amount'].sum()))
-print('Percentage unpaid apportionment: ' + str(test2['Final Apportioned Amount'].sum() / apportionment_by_month['Final Apportioned Amount'].sum() * 100 ) + '%')
 
 
 
