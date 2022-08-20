@@ -242,125 +242,36 @@ default = 'Not met'
 
 kpi['kpi'] = np.select(condlist, choicelist, default)
 
+# Subsetting the data frame according to each lawyers
+def kpidf(x):
+    return kpi.loc[kpi['User'] == x]
 
+a_kpi = kpidf('Lawyer A')
+b_kpi = kpidf('Lawyer B')
+c_kpi = kpidf('Lawyer C')
+d_kpi = kpidf('Lawyer D')
+e_kpi = kpidf('Lawyer E')
+f_kpi = kpidf('Lawyer F')
+g_kpi = kpidf('Lawyer G')
 
+def kpiplot(df, ctc, letter):
+    sns.relplot(x = 'Month',
+                y = 'Final Apportioned Amount',
+                kind = 'line',
+                marker = 'X',
+                aspect = 2,
+                data = df)
+    plt.axhline(y = ctc, linestyle = '-', alpha = 0.5, color = 'g')
+    plt.axhline(y = 2 * ctc, linestyle = '--', alpha = 0.5, color = 'g')
+    plt.axhline(y = 3 * ctc, linestyle = '-.', alpha = 0.5, color = 'g')
+    plt.axhline(y = 4 * ctc, linestyle = ':', alpha = 0.5, color = 'g')
+    plt.title('Lawyer ' + str(letter) + '\'s apportioned amount and revenue targets')
+    return plt.show()
 
-
-
-
-
-
-
-
-"""
-### Exploratory Data Analysis
-
-## 2.1. Case types
-
-# Prints out the unique case types using the unique method
-apportionment['Case Type'].unique()
-
-# Prints out the summary statistics of the final apportionment amount per case type
-apportionment.groupby('Case Type').agg({'Final Apportioned Amount' : 'describe'})
-
-# Plot to show the apportionment amount per case types
-fig, ax = plt.subplots()
-fig.set_size_inches([16,9])
-sns.boxplot( data = apportionment, x = 'Case Type', y = 'Final Apportioned Amount')
-plt.xticks(rotation = 90)
-plt.show()
-
-# Same plot as above except we made a mathematical transformation - log('Final Apportioned Amount')
-plt.clf()
-sns.boxplot( data = apportionment, x = 'Case Type', y = 'Final Apportioned Amount')
-plt.xticks(rotation = 90)
-plt.yscale('log')
-plt.show()
-
-# Plot to show the apportionment amount per case types with respect to each lawyers
-g = sns.catplot(data = apportionment, 
-            x = 'Case Type', 
-            y = 'Final Apportioned Amount', 
-            col = 'User', 
-            kind = 'box',
-            col_wrap = 3)
-g.set_titles('{col_name}')
-g.set(xlabel = 'Case Types', ylabel = 'Final Apportioned Amount')
-plt.xticks(rotation = 90)
-plt.show()
-
-# Above plot does not show appropriate xtick labelling.
-
-# Initialize a list of lawyers
-Lawyers = ['Lawyer A', 'Lawyer B', 'Lawyer C', 'Lawyer D', 'Lawyer E', 'Lawyer F', 'Lawyer G']
-
-# Looping through each lawyers and make a plot
-for lawyer in Lawyers:
-    l = apportionment[apportionment['User'] == lawyer]
-    sns.catplot(data = l, x = 'Case Type', y = 'Final Apportioned Amount', hue = 'Status', kind = 'box').set(title = lawyer)
-    plt.xticks( rotation = 90)
-    plt.show()
-
-## 2.2. Correlation between clocked time and apportioned amount
-
-# Merging apportionment table and hours table to investigate relationship between clocked hours and apportioned amount
-apportionment_hours = apportionment.merge(hours, 
-left_on = ['Date of Invoice', 'User'], 
-right_on = ['Date', 'User/Full Name'], 
-how = 'outer', 
-suffixes = ['_a','_h'])
-
-# Dropping redundant columns
-apportionment_hours = apportionment_hours.drop(['Date', 'User/Full Name'], axis = 1)
-
-# Renaming the column Date of Invoice to Date
-apportionment_hours['Date'] = pd.to_datetime(apportionment_hours['Date of Invoice'])
-
-# Scatter plot between final apportioned amount and actual hours
-sns.relplot(data = apportionment_hours, y = 'Final Apportioned Amount', x = 'Actual Hours', kind = 'scatter', hue = 'User')
-plt.show()
-
-# Correlation between final apportioned amount and actual hours
-apportionment_hours['Final Apportioned Amount'].corr(apportionment_hours['Actual Hours'])
-
-## 2.3. Lawyers reaching their target revenue?
-
-# Grouping the data according to the month and lawyers
-apportionment_months = apportionment_hours.groupby([apportionment_hours['Date'].dt.month, 'User']).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
-
-# Plotting the total apportioned amount per month with respect to each lawyers
-g = sns.relplot(data = apportionment_months, 
-            x = 'Date', 
-            y = 'Final Apportioned Amount', 
-            hue = 'User').set(title = 'Total revenue for each month', 
-            xlabel = 'Month', 
-            ylabel = 'Total apportioned amount')
-plt.show()
-
-
-# Total apportioned amount per month
-
-apportionment_by_month = apportionment.groupby(apportionment['Date of Invoice'].dt.month).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
-
-# Adding an extra column with month names
-month_name = {1.0 : 'January',
-            2.0 : 'February',
-            3.0 : 'March',
-            4.0 : 'April',
-            5.0 : 'May',
-            6.0 : 'June'}
-
-apportionment_by_month['Month'] = apportionment_by_month['Date of Invoice'].apply(lambda x : month_name[x])
-
-apportionment_by_month
-
-# Plotting total apportioned amount per month
-sns.relplot(data = apportionment_by_month,
-            x = 'Month',
-            y = 'Final Apportioned Amount',
-            ci = None,
-            kind = 'line',
-            aspect = 2)
-plt.title('Total apportioned amount per month')
-plt.show()
-"""
+kpiplot(a_kpi, 3600, 'A')
+kpiplot(b_kpi, 6284.43, 'B')
+kpiplot(c_kpi, 7320, 'C')
+kpiplot(d_kpi, 6284.43, 'D')
+kpiplot(e_kpi, 7320, 'E')
+kpiplot(f_kpi, 10308.75, 'F')
+kpiplot(g_kpi, 5699.43, 'G')
