@@ -131,6 +131,23 @@ plt.ylabel('Apportioned amount ($)')
 plt.title('Total monthly apportioned amount')
 plt.show()
 
+# Cumulative sum
+apportionment_by_month['Cumulative apportionment'] = apportionment_by_month['Final Apportioned Amount'].cumsum()
+paid = apportionment_by_month_status.loc[apportionment_by_month_status['Status'] == 'Paid']
+unpaid = apportionment_by_month_status.loc[apportionment_by_month_status['Status'] == 'Awaiting Payment']
+
+paid['Cumulative paid apportionment'] = paid['Final Apportioned Amount'].cumsum()
+unpaid['Cumulative unpaid apportionment'] = unpaid['Final Apportioned Amount'].cumsum()
+
+# Plotting cumulative sum
+plt.plot(apportionment_by_month['Month'], apportionment_by_month['Cumulative apportionment'], label = 'Cumulative apportioned amount')
+plt.plot(paid['Month'], paid['Cumulative paid apportionment'], label = 'Cumulative paid apportioned amount')
+plt.plot(unpaid['Month'], unpaid['Cumulative unpaid apportionment'], label = 'Cumulative unpaid apportioned amount')
+plt.ylabel('Apportioned amount ($)')
+plt.xlabel('Month')
+plt.legend()
+plt.plot()
+
 """ Monthly revenue from lawyers """
 # Grouping the apportionment table by month and lawyer
 apportionment_by_month_lawyer = apportionment.groupby([apportionment['Date of Invoice'].dt.month, 'User']).agg({'Final Apportioned Amount' : 'sum'}).reset_index()
