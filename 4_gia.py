@@ -300,6 +300,7 @@ sns.boxenplot(data = apportionment,
                 y = 'Final Apportioned Amount',
                 dodge = True)
 plt.title('Distribution of revenues per case types')
+plt.ylabel('Apportioned amount')
 plt.xticks( rotation = 90)
 plt.show()
 
@@ -308,6 +309,7 @@ sns.boxenplot(data = apportionment,
             x = 'Case Type',
             y = 'Final Apportioned Amount')
 plt.xticks( rotation = 90)
-plt.title('Distribution of revenues per case types')
+plt.title('Distribution of revenues per case types (with log scale')
+plt.ylabel('log(Apportioned amount)')
 plt.yscale('log')
 plt.show()
