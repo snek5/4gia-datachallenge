@@ -209,14 +209,15 @@ apportionment_hours = apportionment_hours.drop(['Date', 'User/Full Name'], axis 
 apportionment_hours['Date'] = pd.to_datetime(apportionment_hours['Date of Invoice'])
 
 # Scatter plot between final apportioned amount and actual hours
-sns.lmplot(data = apportionment_hours,
+sns.relplot(data = apportionment_hours,
             y = 'Final Apportioned Amount',
             x = 'Actual Hours', 
             aspect = 2, 
-            line_kws = {'color' : 'black'},
-            scatter_kws = {'alpha' : 0.7})
+            kind = 'scatter',
+            alpha = 0.7)
 plt.title('Scatter plot between apportioned amount against actual hours')
-plt.xlabel('Apportioned amount ($)')
+plt.xlabel('Clocked hours')
+plt.ylabel('Apportioned amount ($)')
 plt.show()
 
 # Correlation between final apportioned amount and actual hours
@@ -278,11 +279,13 @@ def kpiplot(df, ctc, letter):
                 marker = 'X',
                 aspect = 2,
                 data = df)
-    plt.axhline(y = ctc, linestyle = '-', alpha = 0.5, color = 'g')
-    plt.axhline(y = 2 * ctc, linestyle = '--', alpha = 0.5, color = 'g')
-    plt.axhline(y = 3 * ctc, linestyle = '-.', alpha = 0.5, color = 'g')
-    plt.axhline(y = 4 * ctc, linestyle = ':', alpha = 0.5, color = 'g')
+    plt.axhline(y = ctc, linestyle = '-', alpha = 0.5, color = 'g', label = "1 * Cost to Company")
+    plt.axhline(y = 2 * ctc, linestyle = '--', alpha = 0.5, color = 'g', label = "2 * Cost to Company")
+    plt.axhline(y = 3 * ctc, linestyle = '-.', alpha = 0.5, color = 'g', label = "3 * Cost to Company")
+    plt.axhline(y = 4 * ctc, linestyle = ':', alpha = 0.5, color = 'g', label = "4 * Cost to Company")
+    plt.legend()
     plt.title('Lawyer ' + str(letter) + '\'s apportioned amount and revenue targets')
+    plt.ylabel('Apportioned amount ($)')
     return plt.show()
 
 kpiplot(a_kpi, 3600, 'A')
@@ -300,7 +303,7 @@ sns.boxenplot(data = apportionment,
                 y = 'Final Apportioned Amount',
                 dodge = True)
 plt.title('Distribution of revenues per case types')
-plt.ylabel('Apportioned amount')
+plt.ylabel('Apportioned amount ($)')
 plt.xticks( rotation = 90)
 plt.show()
 
@@ -309,7 +312,7 @@ sns.boxenplot(data = apportionment,
             x = 'Case Type',
             y = 'Final Apportioned Amount')
 plt.xticks( rotation = 90)
-plt.title('Distribution of revenues per case types (with log scale')
+plt.title('Distribution of revenues per case types (with log scale)')
 plt.ylabel('log(Apportioned amount)')
 plt.yscale('log')
 plt.show()
