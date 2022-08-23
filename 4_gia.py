@@ -146,7 +146,7 @@ plt.plot(unpaid['Month'], unpaid['Cumulative unpaid apportionment'], label = 'Cu
 plt.ylabel('Apportioned amount ($)')
 plt.xlabel('Month')
 plt.legend()
-plt.plot()
+plt.show()
 
 """ Monthly revenue from lawyers """
 # Grouping the apportionment table by month and lawyer
@@ -155,7 +155,7 @@ apportionment_by_month_lawyer = apportionment.groupby([apportionment['Date of In
 apportionment_by_month_lawyer['Month'] = month_col(apportionment_by_month_lawyer, 'Date of Invoice')
 
 # Plotting total apportioned amount per month by lawyer
-sns.relplot(data = apportionment_by_month_status,
+sns.relplot(data = apportionment_by_month_lawyer,
             x = 'Month',
             y = 'Final Apportioned Amount',
             ci = None,
@@ -292,3 +292,20 @@ kpiplot(d_kpi, 6284.43, 'D')
 kpiplot(e_kpi, 7320, 'E')
 kpiplot(f_kpi, 10308.75, 'F')
 kpiplot(g_kpi, 5699.43, 'G')
+
+""" Revenue per case type """
+# Plot to show apportionment ammount per case type
+sns.boxenplot(data = apportionment,
+                x = 'Case Type',
+                y = 'Final Apportioned Amount',
+                dodge = True)
+plt.xticks( rotation = 90)
+plt.show()
+
+# Improve visual clarity by taking log()
+sns.boxenplot(data = apportionment, 
+            x = 'Case Type',
+            y = 'Final Apportioned Amount')
+plt.xticks( rotation = 90)
+plt.yscale('log')
+plt.show()
